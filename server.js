@@ -48,6 +48,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 connectDB();
 
+syncDatabaseAndCreateAdmin(); // <-- Tambahkan ini
+
 
 import routes from './routes/dataRoutes.js';
 import graphRoutes from './routes/graphRoutes.js';
@@ -92,9 +94,8 @@ app.use('/api/news', newsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
-  // eslint-disable-next-line no-console
-  console.log(`Backend berjalan di http://localhost:${PORT}`);
-  await syncDatabaseAndCreateAdmin();
+  console.log(`Backend berjalan di port ${PORT}`);
+  await syncDatabaseAndCreateAdmin(); // <-- Panggil di sini dengan 'await'
 });
 
 async function syncDatabaseAndCreateAdmin() {
