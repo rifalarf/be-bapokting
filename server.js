@@ -100,7 +100,7 @@ app.listen(PORT, async () => {
 
 async function syncDatabaseAndCreateAdmin() {
   try {
-    await sequelize.sync({ alter: true});
+    await sequelize.sync();
     // eslint-disable-next-line no-console
     console.log ('All models synchronized successfully');
 
