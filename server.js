@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
@@ -101,10 +102,17 @@ app.listen(PORT, async () => {
 async function syncDatabaseAndCreateAdmin() {
   try {
     await sequelize.sync();
-    // eslint-disable-next-line no-console
-    console.log ('All models synchronized successfully');
+    console.log('All models synchronized successfully');
 
-    const existingAdmin = await Admin.findOne({ where: {username: 'Admin'} });
+    // Tambahkan blok ini untuk membuat folder uploads
+    const newsUploadDir = path.join(__dirname, 'uploads', 'news');
+    if (!fs.existsSync(newsUploadDir)) {
+      fs.mkdirSync(newsUploadDir, { recursive: true });
+      console.log('Uploads directory for news created.');
+    }
+    // Akhir blok tambahan
+
+    const existingAdmin = await Admin.findOne({ where: { username: 'Admin' } });
     if (!existingAdmin) {
       await Admin.create({
         username: 'Admin',
