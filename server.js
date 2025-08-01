@@ -100,6 +100,7 @@ app.listen(PORT, async () => {
 
 async function syncDatabaseAndCreateAdmin() {
   try {
+    await sequelize.query('CREATE EXTENSION IF NOT EXISTS postgis;');
     await sequelize.sync();
     console.log('All models synchronized successfully');
 
