@@ -4,8 +4,14 @@ import qs from 'qs';
 let cachedToken = null;
 let tokenExpiryTime = 0;
 
+export const clearCachedToken = () => {
+  cachedToken = null;
+  tokenExpiryTime = 0;
+  console.log('Cached token cleared.');
+};
+
 const getToken = async () => {
-  if (cachedToken && Date.now() < tokenExpiryTime - (10 * 60 * 1000)) { 
+  if (cachedToken && Date.now() < tokenExpiryTime - (10 * 60 * 1000)) {
     // eslint-disable-next-line no-console
     console.log('Using cached token.');
     return cachedToken;
@@ -31,7 +37,6 @@ const getToken = async () => {
     // eslint-disable-next-line no-console
     console.log('New token obtained. Expires in:', response.data.expires_in, 'seconds.');
     return cachedToken;
-    // return response.data.access_token;
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Gagal mengambil token:',  error.response?.data || error.message);

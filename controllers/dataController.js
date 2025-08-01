@@ -1,4 +1,4 @@
-import getToken from '../services/tokenService.js';
+import getToken, { clearCachedToken } from '../services/tokenService.js';
 import axios from 'axios';
 
 function getYesterday(dateStr) {
@@ -11,7 +11,6 @@ export const fetchDataHandler = async (req, res) => {
   try {
     const { market_id, date } = req.body;
 
-    // eslint-disable-next-line camelcase
     if (!market_id || !date) {
       return res
         .status(400)
@@ -21,7 +20,6 @@ export const fetchDataHandler = async (req, res) => {
     let token = await getToken();
 
     const makeSilindaApiRequest = async (
-      // eslint-disable-next-line camelcase
       market_id,
       time,
       currentToken,
@@ -48,7 +46,6 @@ export const fetchDataHandler = async (req, res) => {
         );
         return response;
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error(
           `Error in Silinda API request (isRetry: ${isRetry}):`,
           error.response?.status,
@@ -56,13 +53,11 @@ export const fetchDataHandler = async (req, res) => {
         );
 
         if (error.response?.status === 401 && !isRetry) {
-          // eslint-disable-next-line no-console
           console.warn(
             '401 detected, attempting to refresh token and retry...'
           );
-
+          clearCachedToken();
           token = await getToken();
-
           return await makeSilindaApiRequest(market_id, time, token, true);
         }
         throw error;
@@ -73,7 +68,6 @@ export const fetchDataHandler = async (req, res) => {
     try {
       currentResponse = await makeSilindaApiRequest(market_id, date, token);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to get current data:', error.message);
       return res
         .status(500)
@@ -89,7 +83,6 @@ export const fetchDataHandler = async (req, res) => {
         token
       );
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to get previous day data:', error.message);
       return res
         .status(500)
@@ -99,7 +92,6 @@ export const fetchDataHandler = async (req, res) => {
     const currentData = currentResponse.data.data;
     const previousData = previousResponse.data.data;
 
-    // Bandingkan harga dan beri status
     const result = currentData.map((item) => {
       const previousItem = previousData.find(
         (p) => p.commodity_id === item.commodity_id
@@ -116,7 +108,6 @@ export const fetchDataHandler = async (req, res) => {
       if (currentPrice > prevPrice) status = 'Naik';
       else if (currentPrice < prevPrice) status = 'Turun';
 
-      // Hitung persentase selisih
       if (prevPrice !== 0) {
         percentageDifference = (difference / prevPrice) * 100;
       } else if (currentPrice !== 0) {
@@ -127,19 +118,12 @@ export const fetchDataHandler = async (req, res) => {
 
       return {
         commodity_id: item.commodity_id,
-
         commodity_name: item.commodity_name,
-
         commodity_image_path: item.commodity_image_path,
-
         market_id: item.market_id,
-
         market_name: item.market_name,
-
         current_price: currentPrice,
-
         previous_price: prevPrice,
-
         percentage_difference: item.percentage_difference,
         status: status,
         date: item.time,
@@ -148,10 +132,7 @@ export const fetchDataHandler = async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Gagal mengambil data (general catch):', error.message);
     res.status(500).json({ message: 'Gagal mengambil data' });
   }
 };
-
-// ... (getYesterday function) ...

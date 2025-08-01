@@ -1,4 +1,4 @@
-import getToken from '../services/tokenService.js';
+import getToken, { clearCachedToken } from '../services/tokenService.js';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 
@@ -15,7 +15,6 @@ function getYesterday(dateStr) {
   return date.toISOString().split('T')[0];
 }
 
-// eslint-disable-next-line camelcase
 function getUnitByCommodityId(commodity_id) {
   const literIds = ['7', '26'];
   const butirIds = ['29'];
@@ -42,7 +41,6 @@ export const fetchReportHandler = async (req, res) => {
     token = await getToken();
 
     const makeSilindaApiRequest = async (
-      // eslint-disable-next-line camelcase
       market_id,
       time,
       currentToken,
@@ -64,7 +62,6 @@ export const fetchReportHandler = async (req, res) => {
         );
         return response;
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error(
           `Error in Silinda API request (isRetry: ${isRetry}):`,
           error.response?.status,
@@ -72,10 +69,10 @@ export const fetchReportHandler = async (req, res) => {
         );
 
         if (error.response?.status === 401 && !isRetry) {
-          // eslint-disable-next-line no-console
           console.warn(
             '401 detected, attempting to refresh token and retry...'
           );
+          clearCachedToken();
           token = await getToken();
           return await makeSilindaApiRequest(market_id, time, token, true);
         }
@@ -95,7 +92,6 @@ export const fetchReportHandler = async (req, res) => {
           (await makeSilindaApiRequest(pasar.id, yesterday, token)).data.data ||
           [];
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error(
           `Failed to fetch data for market ${pasar.name}:`,
           error.message
@@ -140,7 +136,6 @@ export const fetchReportHandler = async (req, res) => {
       });
     }
 
-    // Hitung rata-rata, selisih, status, dan persentase
     const pasarCount = pasarList.length;
     reportMap.forEach((item) => {
       item.current_price = item.current_price / pasarCount;
@@ -162,13 +157,11 @@ export const fetchReportHandler = async (req, res) => {
 
     res.json(Array.from(reportMap.values()));
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Gagal mengambil laporan:', error.message);
     res.status(500).json({ message: 'Gagal mengambil laporan' });
   }
 };
 
-// Handler export ke Excel
 export const exportExcelHandler = async (req, res) => {
   try {
     const { reportData } = req.body;
@@ -179,7 +172,6 @@ export const exportExcelHandler = async (req, res) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Laporan Harga Komoditi');
 
-    // Header kolom
     worksheet.columns = [
       { header: 'No', key: 'no', width: 5 },
       { header: 'Komoditi', key: 'commodity_name', width: 30 },
@@ -221,7 +213,6 @@ export const exportExcelHandler = async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Gagal export ke Excel:', error.message);
     res.status(500).json({ message: 'Gagal export ke Excel' });
   }

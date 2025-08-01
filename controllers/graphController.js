@@ -1,7 +1,6 @@
-import getToken from '../services/tokenService.js';
+import getToken, { clearCachedToken } from '../services/tokenService.js';
 import axios from 'axios';
 
-// Fungsi format tanggal ke YYYY-MM-DD
 function formatDate(date) {
   return date.toISOString().split('T')[0];
 }
@@ -17,14 +16,11 @@ function getLast7Days(dateStr) {
   return days;
 }
 
-// Handler ambil data grafik
 export const getPriceChart = async (req, res) => {
   let token;
   try {
-    
     const { market_id, commodity_id, date } = req.body;
-    // eslint-disable-next-line camelcase
-    if (!market_id || !commodity_id || !date) { 
+    if (!market_id || !commodity_id || !date) {
       return res
         .status(400)
         .json({ message: 'market_id, commodity_id, dan date wajib diisi' });
@@ -32,11 +28,9 @@ export const getPriceChart = async (req, res) => {
 
     token = await getToken();
 
-    
     const makeSilindaApiRequest = async (
-      // eslint-disable-next-line camelcase
-      market_id, // eslint-disable-next-line camelcase
-      commodity_id, 
+      market_id,
+      commodity_id,
       time,
       currentToken,
       isRetry = false
@@ -55,7 +49,7 @@ export const getPriceChart = async (req, res) => {
           {
             length: 1000,
             market_id,
-            commodity_id, 
+            commodity_id,
             time,
             page: 1,
           },
@@ -63,7 +57,6 @@ export const getPriceChart = async (req, res) => {
         );
         return response;
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error(
           `Error in Silinda API request (isRetry: ${isRetry}):`,
           error.response?.status,
@@ -71,14 +64,14 @@ export const getPriceChart = async (req, res) => {
         );
 
         if (error.response?.status === 401 && !isRetry) {
-          // eslint-disable-next-line no-console
           console.warn(
             '401 detected, attempting to refresh token and retry...'
           );
+          clearCachedToken();
           token = await getToken();
           return await makeSilindaApiRequest(
-            market_id, 
-            commodity_id, 
+            market_id,
+            commodity_id,
             time,
             token,
             true
@@ -89,7 +82,6 @@ export const getPriceChart = async (req, res) => {
     };
 
     const dates = getLast7Days(date);
-
     const results = [];
     let commodityName = '';
     let marketName = '';
@@ -104,9 +96,7 @@ export const getPriceChart = async (req, res) => {
           token
         );
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error(`Failed to get data for date ${d}:`, error.message);
-
         results.push({
           date: d,
           price: null,
@@ -115,9 +105,7 @@ export const getPriceChart = async (req, res) => {
         continue;
       }
 
-      
       const found = response.data.data.find(
-        // eslint-disable-next-line camelcase
         (item) => item.commodity_id === commodity_id
       );
 
@@ -140,7 +128,6 @@ export const getPriceChart = async (req, res) => {
       prices: results,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error(
       'Gagal mengambil data grafik (general catch):',
       error.message
