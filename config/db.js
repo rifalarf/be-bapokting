@@ -30,13 +30,12 @@ if (process.env.DATABASE_URL) {
 const connectDB = async () => {
   try {
     await sequelize.authenticate();
-    // eslint-disable-next-line no-console
     console.log('PostgreSQL Connection has been established successfully.');
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Unable to connect to the database:', error);
-    process.exit(1);
+    throw error;
   }
 };
+
 
 export { sequelize, connectDB };
