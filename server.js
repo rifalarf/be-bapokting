@@ -92,7 +92,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/upt', uptRoutes);
 app.use('/api/news', newsRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 app.listen(PORT, async () => {
   console.log(`Backend berjalan di port ${PORT}`);
   await syncDatabaseAndCreateAdmin(); // <-- Panggil di sini dengan 'await'
